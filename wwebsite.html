@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global distributions of the naturalized alien flora</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f8f8;
+            color: #333;
+        }
+        .container {
+            max-width: 100%;
+            margin: 2px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 2px;
+        }
+        .header h1 {
+            flex-grow: 1;
+            text-align: center;
+            margin: 0;
+            color: #2c3e50;
+        }
+        .header img {
+            height: 100px;
+            display: block;
+            margin: 0 2px;
+        }
+        .navbar {
+            background-color: #3498db;
+            padding: 10px 0;
+            border-radius: 5px;
+            margin-bottom: 2px;
+        }
+        .navbar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .navbar ul li {
+            margin: 0 15px;
+        }
+        .navbar ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1em;
+            padding: 5px 10px;
+            border-radius: 3px;
+            transition: background-color 0.3s ease;
+        }
+        .navbar ul li a:hover, .navbar ul li a.active {
+            background-color: #2980b9;
+        }
+        .content-section {
+            padding: 20px 0;
+        }
+        h2, h3 {
+            color: #3498db;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 3px;
+            margin-bottom: 2px;
+        }
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .bodylinks {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .bodylinks:hover {
+            text-decoration: underline;
+        }
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 2px;
+        }
+        .image-card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .image-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-bottom: 2px;
+        }
+        .image-card caption {
+            font-style: italic;
+            color: #555;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .download-button {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        .download-button:hover {
+            background-color: #218838;
+        }
+        ul {
+            list-style: disc;
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        ul li {
+            margin-bottom: 1px;
+            font-size: 18px;
+        }
+        
+        /* New styles for layout */
+        .main-content-wrapper {
+            display: flex; /* Use flexbox for side-by-side layout */
+            gap: 20px; /* Space between map and sidebar */
+        }
+
+        .map-container {
+            flex: 1; /* Map takes up remaining space */
+            min-width: 0; /* Allow map to shrink */
+        }
+
+        .sidebar {
+            width: 350px; /* Fixed width for the sidebar */
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-sizing: border-box; /* Include padding in width */
+            align-self: flex-start; /* Align to the top of the flex container */
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Ensures padding doesn't increase total width */
+        }
+
+        /* Leaflet map styling */
+        #map {
+            width: 100%;
+            height: 100%; /* Adjust height as desired */
+            background-color: lch(100% 0.01 296.81); /* Light grey background before map loads */
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .leaflet-container {
+            background: #00000000; /* Transparent background for Leaflet */
+            height: 100%;
+            width: 100%;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* Styling for the manual legend */
+        .legend {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px; /* Space above the legend */
+            border: 1px solid #ddd;
+        }
+        .legend h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+        .legend div {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend i {
+            width: 20px;
+            height: 20px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+            border-radius: 3px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) { /* Adjust breakpoint as needed */
+            .main-content-wrapper {
+                flex-direction: column; /* Stack map and sidebar vertically */
+            }
+            .sidebar {
+                width: 100%; /* Sidebar takes full width */
+                order: -1; /* Place sidebar above the map on small screens */
+            }
+            #map {
+                height: 500px; /* Adjust map height for smaller screens */
+            }
+        }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .header img {
+                margin: 10px auto;
+            }
+            .navbar ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            .navbar ul li {
+                margin: 5px 0;
+            }
+            .image-gallery {
+                grid-template-columns: 1fr; /* Stack images on small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <img src="https://a772-cvl-sv08.biodiv.univie.ac.at/files/BIO_INVASIONS-01.png" alt="BioInvasions Logo">
+            <h1>Global distributions of the naturalized alien flora</h1>
+            <img src="https://a772-cvl-sv08.biodiv.univie.ac.at/files/glonaf.png" alt="GloNAF Logo">
+        </header>
+
+        <nav class="navbar">
+            <ul>
+                <li><a href="#" id="about-nav" class="active">About</a></li>
+                <li><a href="#" id="single-species-nav">Single Species Maps</a></li>
+            </ul>
+        </nav>
+
+        <div id="about-section" class="content-section">
+            <p>Modelled global distribution of the naturalized flora under current environmental conditions and under environmental change until the end of the 21st century.</p>
+            <p>This web app is is an extension of the study: <em>Spatial and compositional shifts of plant invasion risk under future environmental change,</em> , (In prep.)</p>
+            <p>Ali Omer<sup>1</sup> and Franz Essl<sup>1</sup></p>
+            <p><sup>1</sup>Division of BioInvasions, Global Change & Macroecology, Department of Botany and Biodiversity Research, University of Vienna, Rennweg 14, Vienna 1030, Austria</p>
+
+            <hr>
+
+            <h2>Global naturalized alien plant richness maps</h2>
+            <p>Our models resulted in single species binary distrbution maps. These maps were summed up to derive the potential number of naturalized alien plants (i.e., potential alien plant richness) in each grid cell under current conditions and future environmental scenarios. Use the <a href="#" class="bodylinks" onclick="showSingleSpeciesMaps()"><strong>Single Species Maps</strong></a> tab to explore the distribution of individual species.</p>
+
+            <div class="image-gallery">
+                <div class="image-card">
+                    <img src="https://a772-cvl-sv08.biodiv.univie.ac.at/files/fig1.png" alt="Current Species Richness Map">
+                    <caption>Naturalized alien plant richness under current environmental conditions.</caption>
+                    <a href="https://a772-cvl-sv08.biodiv.univie.ac.at/files/Current.tif" download="Current_stuck.tif" class="download-button">Download Raster</a>
+                </div>
+                <div class="image-card">
+                    <img src="https://a772-cvl-sv08.biodiv.univie.ac.at/files/fig2.png" alt="SSP1 Species Richness Map">
+                    <caption>Naturalized alien plant richness under SSP1 (Sustainability) scenario.</caption>
+                    <a href="https://a772-cvl-sv08.biodiv.univie.ac.at/files/SSP1.tif" download="SSP1_stuck.tif" class="download-button">Download Raster</a>
+                </div>
+                <div class="image-card">
+                    <img src="https://a772-cvl-sv08.biodiv.univie.ac.at/files/fig3.png" alt="SSP5 Species Richness Map">
+                    <caption>Naturalized alien plant richness under SSP5 (Fossil-fueled Development) scenario.</caption>
+                    <a href="https://a772-cvl-sv08.biodiv.univie.ac.at/files/SSP5.tif" download="SSP5_stuck.tif" class="download-button">Download Raster</a>
+                </div>
+            </div>
+
+            <hr>
+
+            <h3>Data Sources:</h3>
+            <p>Publicly available data sources used in the Project</p>
+            <ul>
+                <li><strong>GloNAF Database:</strong>
+                    <p>Davis, A. J. S., Dawson, W., Essl, F., Kreft, H., Pergl, J., Pyšek, P.,…van Kleunen, M. (2025). Global Naturalized Alien Flora (GloNAF). Open access data to support research on understanding global plant invasions. <a href='https://doi.org/10.5281/zenodo.14696776' class="bodylinks">https://doi.org/10.5281/zenodo.14696776</a></p>
+                </li>
+                <li><strong>Climatic data:</strong>
+                    <p>Karger, D. N., Conrad, O., Böhner, J., Kawohl, T., Kreft, H., Soria-Auza, R. W.,…Kessler, M. (2017). Climatologies at high resolution for the earth’s land surface areas. Scientific Data, 4(1). <a href='https://doi.org/10.1038/sdata.2017.122' class="bodylinks">https://doi.org/10.1038/sdata.2017.122</a></p>
+                </li>
+                <li><strong>Soil data:</strong>
+                    <p>Poggio, L., de Sousa, L. M., Batjes, N. H., Heuvelink, G. B. M., Kempen, B., Ribeiro, E., & Rossiter, D. (2021). SoilGrids 2.0: producing soil information for the globe with quantified spatial uncertainty. SOIL, 7(1), 217-240. <a href='https://soilgrids.org/' class="bodylinks">https://soilgrids.org/</a></p>
+                </li>
+                <li><strong>Land use data:</strong>
+                    <p>Hurtt, G. C., Chini, L., Sahajpal, R., Frolking, S., Bodirsky, B. L., Calvin, K.,…Zhang, X. (2020). Harmonization of global land use change and management for the period 850–2100 (LUH2) for CMIP6. Geosci. Model Dev., 13(11), 5425-5464. <a href='https://doi.org/10.5194/gmd-13-5425-2020' class="bodylinks">https://doi.org/10.5194/gmd-13-5425-2020</a></p>
+                </li>
+            </ul>
+        </div>
+
+        <div id="single-species-maps-section" class="content-section" style="display: none;">
+            
+            <div class="main-content-wrapper">
+                <div class="sidebar">
+                    <h3>Select Species and Scenario</h3>
+                    <div class="form-group">
+                        <label for="species-select">Select Species:</label>
+                        <input type="text" id="species-select" placeholder="Enter text..." list="species-list" disabled>
+                        <datalist id="species-list">
+                            </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label for="envset-select">Select Environmental Set:</label>
+                        <select id="envset-select">
+                            <option value="Environmental set 1">Environmental set 1</option>
+                            <option value="Environmental set 2">Environmental set 2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="time-select">Select Time Period:</label>
+                        <select id="time-select">
+                            <option value="current">current</option>
+                            <option value="future">future</option>
+                        </select>
+                    </div>
+                    <div id="future-options" style="display: none;">
+                        <div class="form-group">
+                            <label for="scenario-select">Select Scenario:</label>
+                            <select id="scenario-select">
+                                <option value="ssp1">ssp1</option>
+                                <option value="ssp5">ssp5</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="gcm-select">Select GCM:</label>
+                            <select id="gcm-select">
+                                <option value="ukesm">ukesm</option>
+                                <option value="mpi">mpi</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="download-button" id="downloadSingleSpecies">Download Raster</button>
+
+                    <div class="legend">
+                        <h4>Presence/Absence</h4>
+                        <div><i style="background:#cc0033;"></i> Presence</div>
+                        <div><i style="background:#666666;"></i> Absence</div>
+                    </div>
+                </div>
+
+                <div class="map-container">
+                    <div id='map'></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // --- Global Variables ---
+        let map; // Declare map globally
+        let currentSpeciesLayer; // To hold the currently displayed species layer
+        let speciesList = []; // Will be populated from the hosted text file
+
+        // --- Tab Navigation Functions ---
+        const aboutNav = document.getElementById('about-nav');
+        const singleSpeciesNav = document.getElementById('single-species-nav');
+        const aboutSection = document.getElementById('about-section');
+        const singleSpeciesSection = document.getElementById('single-species-maps-section');
+
+        function showSection(sectionToShow) {
+            aboutSection.style.display = 'none';
+            singleSpeciesSection.style.display = 'none';
+
+            aboutNav.classList.remove('active');
+            singleSpeciesNav.classList.remove('active');
+
+            if (sectionToShow === 'about') {
+                aboutSection.style.display = 'block';
+                aboutNav.classList.add('active');
+            } else if (sectionToShow === 'single') {
+                singleSpeciesSection.style.display = 'block';
+                singleSpeciesNav.classList.add('active');
+                // Initialize map when the single species section is shown for the first time
+                if (!map) {
+                    initializeMap();
+                }
+                // Update the map layer when the tab is switched to it
+                updateMapLayer();
+            }
+        }
+
+        aboutNav.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSection('about');
+        });
+
+        singleSpeciesNav.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSection('single');
+        });
+
+        function showSingleSpeciesMaps() {
+            showSection('single');
+        }
+
+        // --- Leaflet Map Initialization and Update Logic ---
+        function initializeMap() {
+            var southWest = L.latLng(-57, -180);
+            var northEast = L.latLng(90, 180);
+            var worldBounds = L.latLngBounds(southWest, northEast);
+
+            map = L.map('map', {
+                center: [30, 30],
+                zoom: 2,
+                maxBounds: worldBounds,
+                minZoom: 2,
+                maxBoundsViscosity: 1.0,
+            });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                noWrap: true
+            }).addTo(map);
+
+            updateMapLayer();
+        }
+
+        function updateMapLayer() {
+            if (!map) return;
+
+            const speciesInput = document.getElementById('species-select');
+            const species = speciesInput.value.trim(); // Trim whitespace from user input
+            const envset = document.getElementById('envset-select').value;
+            const time = document.getElementById('time-select').value;
+            const scenario = document.getElementById('scenario-select').value;
+            const gcm = document.getElementById('gcm-select').value;
+
+            // Remove previous layer if it exists
+            if (currentSpeciesLayer) {
+                map.removeLayer(currentSpeciesLayer);
+                currentSpeciesLayer = null;
+            }
+
+            if (!species) {
+                // If no species is selected, just clear the overlay and do nothing else
+                return;
+            }
+
+            // Validate that the selected species is in our loaded list
+            if (!speciesList.includes(species)) {
+                console.warn(`Selected species "${species}" not found in the loaded list. Please select a valid species from the suggestions.`);
+                // Optionally, clear the input or show a message to the user
+                // speciesInput.value = ''; 
+                return; 
+            }
+
+            // Determine the URL path for the raster tile layer
+            let subdir = '';
+            if (envset === 'Environmental set 2') {
+                subdir = '_2';
+            }
+
+            let tile_url;
+            // The slug generation for tile URLs: lowercase, replace spaces with hyphens, remove dots.
+            // This needs to match how your tile server processed the species names to create directories.
+            const speciesSlug = species.toLowerCase().replace(/ /g, '-').replace(/\./g, ''); 
+
+            if (time === 'current') {
+                // Example: https://a772-bdc-sv15.biodiv.univie.ac.at/tiles/glonaf-sdm-current_2/abelia-chinensis/{z}/{x}/{y}.png
+                tile_url = `https://a772-bdc-sv15.biodiv.univie.ac.at/tiles/glonaf-sdm-current${subdir}/${speciesSlug}/{z}/{x}/{y}.png`;
+            } else {
+                // Example: https://a772-bdc-sv15.biodiv.univie.ac.at/tiles/glonaf-sdm-ssp1-ukesm_2/abelia-chinensis/{z}/{x}/{y}.png
+                tile_url = `https://a772-bdc-sv15.biodiv.univie.ac.at/tiles/glonaf-sdm-${scenario}-${gcm}${subdir}/${speciesSlug}/{z}/{x}/{y}.png`;
+            }
+
+            currentSpeciesLayer = L.tileLayer(tile_url, {
+                opacity: 0.7, // Adjust opacity as needed for visibility over base map
+                attribution: `Data for ${species}`,
+                // errorTileUrl: 'https://www.example.com/path/to/transparent_tile.png' // Consider adding a transparent error tile
+            }).addTo(map);
+        }
+
+        // --- Event Listeners for UI Controls ---
+        document.getElementById('time-select').addEventListener('change', toggleFutureOptions);
+        document.getElementById('envset-select').addEventListener('change', updateMapLayer);
+        document.getElementById('scenario-select').addEventListener('change', updateMapLayer);
+        document.getElementById('gcm-select').addEventListener('change', updateMapLayer);
+
+        // FIX: Add an 'input' event listener to the species-select field
+        // This allows for better validation and ensures a valid species is always chosen or cleared
+        document.getElementById('species-select').addEventListener('input', function() {
+            const inputVal = this.value.trim(); // Trim whitespace
+            const dataList = document.getElementById(this.getAttribute('list'));
+            let foundMatch = false;
+
+            // Check if the current input value matches any option in the datalist
+            if (dataList) {
+                for (let i = 0; i < dataList.options.length; i++) {
+                    if (dataList.options[i].value === inputVal) {
+                        foundMatch = true;
+                        break;
+                    }
+                }
+            }
+            // Call updateMapLayer to reflect the change, even if it's just typing
+            updateMapLayer();
+        });
+
+
+        // --- Toggle Future Options ---
+        function toggleFutureOptions() {
+            const timeSelect = document.getElementById('time-select');
+            const futureOptionsDiv = document.getElementById('future-options');
+            if (timeSelect.value === 'future') {
+                futureOptionsDiv.style.display = 'block';
+            } else {
+                futureOptionsDiv.style.display = 'none';
+            }
+            updateMapLayer(); // Update map when time period changes
+        }
+
+        // --- Download Single Species Raster ---
+        document.getElementById('downloadSingleSpecies').addEventListener('click', function() {
+            const species = document.getElementById('species-select').value.trim(); // Trim whitespace
+            const envset = document.getElementById('envset-select').value;
+            const time = document.getElementById('time-select').value;
+            const scenario = document.getElementById('scenario-select').value;
+            const gcm = document.getElementById('gcm-select').value;
+
+            if (!species) {
+                alert("Please select a species to download the raster.");
+                return;
+            }
+
+            // Validate against the loaded species list
+            if (!speciesList.includes(species)) {
+                alert("Selected species not found in the list. Please choose a valid species from the suggestions.");
+                return;
+            }
+
+            let subdirForDownload = '';
+            // For filename construction, your R code seemed to use '2' instead of '_2' for subdir
+            if (envset === 'Environmental set 2') {
+                subdirForDownload = '2'; 
+            }
+
+            let downloadUrl;
+            let filename;
+
+            if (time === 'current') {
+                // The download URLs for the original .tif files
+                // Example: https://a772-cvl-sv08.biodiv.univie.ac.at/files/current_2/Abelia chinensis.tif
+                downloadUrl = `https://a772-cvl-sv08.biodiv.univie.ac.at/files/${time}${subdirForDownload ? '_'+subdirForDownload : ''}/${species}.tif`;
+                filename = `${species}_${time}${subdirForDownload ? '_'+subdirForDownload : ''}.tif`; // Ensure filename matches structure
+            } else {
+                // Example: https://a772-cvl-sv08.biodiv.univie.ac.at/files/ssp1_ukesm_2/Abelia chinensis.tif
+                downloadUrl = `https://a772-cvl-sv08.biodiv.univie.ac.at/files/${scenario}_${gcm}${subdirForDownload ? '_'+subdirForDownload : ''}/${species}.tif`;
+                filename = `${species}_${scenario}_${gcm}${subdirForDownload ? '_'+subdirForDownload : ''}.tif`; // Ensure filename matches structure
+            }
+            
+            console.log("Attempting to download from:", downloadUrl);
+            console.log("Suggested filename:", filename);
+
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+
+
+        // --- Initial Setup and Species List Loading ---
+        // Function to fetch species list from CSV
+        async function fetchSpeciesList() {
+            const speciesInput = document.getElementById('species-select');
+            speciesInput.placeholder = "Enter text...";
+            speciesInput.disabled = true; // Disable input while loading
+
+            const speciesListUrl = 'https://backend.univie.ac.at/fileadmin/user_upload/p_glonafdistributions/splist.txt'; // Define URL here for clarity
+
+            try {
+                console.log(`Attempting to fetch species list from: ${speciesListUrl}`); // Added console log for debugging
+                const response = await fetch(speciesListUrl); 
+                
+                if (!response.ok) {
+                    // Improved error message for non-OK responses
+                    throw new Error(`HTTP error! Status: ${response.status} - Could not retrieve file from ${speciesListUrl}`);
+                }
+                const textContent = await response.text();
+                
+                // Split by newline and filter out empty strings, then trim whitespace
+                speciesList = textContent.split(/\r?\n/).map(line => line.trim()).filter(line => line !== ''); 
+                populateSpeciesDatalist();
+                speciesInput.placeholder = "Type to search...";
+                speciesInput.disabled = false; // Enable input after loading
+                console.log(`Successfully loaded ${speciesList.length} species from ${speciesListUrl}.`); // Added success log
+
+            } catch (error) {
+                console.error(`Error fetching species list from ${speciesListUrl}:`, error); // Enhanced error log
+                alert(`Could not load the full species list. Please check the URL (${speciesListUrl}), your internet connection, or if the file exists and is accessible. More details in console.`); // Enhanced alert
+                speciesInput.placeholder = "Failed to load species.";
+                // Keep disabled if loading failed, or provide a minimal fallback if desired
+            }
+        }
+
+        // Function to populate species datalist
+        function populateSpeciesDatalist() {
+            const speciesDatalist = document.getElementById('species-list');
+            speciesDatalist.innerHTML = ''; // Clear existing options
+            speciesList.forEach(species => {
+                const option = document.createElement('option');
+                option.value = species;
+                speciesDatalist.appendChild(option);
+            });
+        }
+
+        // When the DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchSpeciesList(); // Start fetching the species list immediately
+            showSection('about'); // Show the "About" section by default
+            toggleFutureOptions(); // Set initial display state for future options
+        });
+
+    </script>
+</body>
+</html>
